@@ -28,11 +28,6 @@ public class Es8DynamicSink implements DynamicTableSink {
     @Override
     public ChangelogMode getChangelogMode(ChangelogMode requestedMode) {
         // 告知 Flink 本 Sink 支持的数据操作类型
-        // 简单实现可以只支持 INSERT，如果需要支持 UPDATE/DELETE，需要在这里配置
-     /*   return ChangelogMode.newBuilder()
-                .addContainedKind(RowKind.INSERT)
-                .addContainedKind(RowKind.UPDATE_AFTER)
-                .build();*/
         // 支持所有操作类型：插入、更新前、更新后、删除
         return ChangelogMode.newBuilder()
                 .addContainedKind(RowKind.INSERT)
