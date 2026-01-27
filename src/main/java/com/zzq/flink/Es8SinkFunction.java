@@ -6,7 +6,7 @@ import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
-import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.*;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
@@ -22,46 +22,6 @@ import java.util.Map;
  * @author zzq
  * @date 2026/01/27 18:51:19
  */
-/*
-public class Es8SinkFunction extends RichSinkFunction<RowData> {
-    private transient ElasticsearchClient client;
-    private final String hosts;
-    private final String index;
-    private final DataType dataType;
-
-    public Es8SinkFunction(String hosts, String index, DataType dataType) {
-        this.hosts = hosts;
-        this.index = index;
-        this.dataType = dataType;
-    }
-
-    @Override
-    public void open(Configuration parameters) throws Exception {
-        // 初始化 ES 8 客户端
-        RestClient restClient = RestClient.builder(HttpHost.create(hosts)).build();
-        ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-        this.client = new ElasticsearchClient(transport);
-    }
-
-    @Override
-    public void invoke(RowData value, Context context) throws Exception {
-        // 1. 将 RowData 转换为 Map 或 JSON 字符串
-        // 这里可以使用 Flink 提供的 RowData.FieldGetter
-
-        // 2. 发起 ES 索引请求
-        client.index(i -> i
-                .index(index)
-                .document(value.toString()) // 简化示例，实际需按 schema 转换
-        );
-    }
-
-    @Override
-    public void close() throws Exception {
-        if (client != null) { */
-/* 关闭客户端 *//*
- }
-    }
-}*/
 public class Es8SinkFunction extends RichSinkFunction<RowData> {
     private transient ElasticsearchClient client;
     private final String hosts;
@@ -113,12 +73,27 @@ public class Es8SinkFunction extends RichSinkFunction<RowData> {
         // UPDATE_BEFORE 通常忽略，因为紧接着的 UPDATE_AFTER 会覆盖整个 Doc
     }
 
+
+
     private Map<String, Object> rowToMap(RowData row) {
         Map<String, Object> map = new HashMap<>();
         RowType rowType = (RowType) physicalDataType.getLogicalType();
         List<String> fieldNames = rowType.getFieldNames();
+
         for (int i = 0; i < fieldGetters.length; i++) {
-            map.put(fieldNames.get(i), fieldGetters[i].getFieldOrNull(row));
+            Object val = fieldGetters[i].getFieldOrNull(row);
+
+            // --- 核心修复：转换 Flink 内部对象为标准 Java 对象 ---
+            if (val instanceof StringData) {
+                val = val.toString(); // 转换 BinaryStringData 为 String
+            } else if (val instanceof TimestampData) {
+                val = ((TimestampData) val).toTimestamp(); // 转换 TimestampData 为 java.sql.Timestamp
+            } else if (val instanceof DecimalData) {
+                val = ((DecimalData) val).toBigDecimal(); // 转换精度数据
+            }
+            // 根据需要添加其他类型处理，如 ArrayData, MapData
+
+            map.put(fieldNames.get(i), val);
         }
         return map;
     }
