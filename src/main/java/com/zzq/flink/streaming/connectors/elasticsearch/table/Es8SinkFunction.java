@@ -1,4 +1,4 @@
-package com.zzq.flink;
+package com.zzq.flink.streaming.connectors.elasticsearch.table;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;

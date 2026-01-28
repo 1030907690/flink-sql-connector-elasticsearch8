@@ -1,1 +1,1 @@
-com.zzq.table.Es8DynamicTableFactory
+com.zzq.flink.streaming.connectors.elasticsearch.table.Es8DynamicTableFactory

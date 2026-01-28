@@ -1,4 +1,4 @@
-package com.zzq.flink;
+package com.zzq.flink.streaming.connectors.elasticsearch.table;
 
 
 import org.apache.flink.table.connector.ChangelogMode;

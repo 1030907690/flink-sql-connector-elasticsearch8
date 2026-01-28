@@ -1,6 +1,5 @@
-package com.zzq.table;
+package com.zzq.flink.streaming.connectors.elasticsearch.table;
 
-import com.zzq.flink.Es8DynamicSink;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.ReadableConfig;
