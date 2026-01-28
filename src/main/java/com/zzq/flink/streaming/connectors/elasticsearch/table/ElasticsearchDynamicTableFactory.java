@@ -1,5 +1,6 @@
 package com.zzq.flink.streaming.connectors.elasticsearch.table;
 
+import com.zzq.flink.streaming.connectors.elasticsearch.config.ElasticsearchOptions;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.ReadableConfig;
@@ -19,18 +20,7 @@ import java.util.Set;
  */
 public class ElasticsearchDynamicTableFactory implements DynamicTableSinkFactory {
 
-    // 1. 定义配置项 (必须是 ConfigOption)
-    public static final ConfigOption<String> HOSTS = ConfigOptions
-            .key("hosts")
-            .stringType()
-            .noDefaultValue()
-            .withDescription("ES 8 hosts, e.g. http://localhost:9200");
 
-    public static final ConfigOption<String> INDEX = ConfigOptions
-            .key("index")
-            .stringType()
-            .noDefaultValue()
-            .withDescription("Elasticsearch index name");
 
     @Override
     public String factoryIdentifier() {
@@ -40,14 +30,19 @@ public class ElasticsearchDynamicTableFactory implements DynamicTableSinkFactory
     @Override
     public Set<ConfigOption<?>> requiredOptions() {
         Set<ConfigOption<?>> options = new HashSet<>();
-        options.add(HOSTS); // 必须添加到这里
-        options.add(INDEX);
+        options.add(ElasticsearchOptions.HOSTS); // 必须添加到这里
+        options.add(ElasticsearchOptions.INDEX);
         return options;
     }
 
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
-        return Collections.emptySet();
+        Set<ConfigOption<?>> options = new HashSet<>();
+        options.add(ElasticsearchOptions.USERNAME);
+        options.add(ElasticsearchOptions.PASSWORD);
+        options.add(ElasticsearchOptions.BULK_FLUSH_MAX_ACTIONS);
+        options.add(ElasticsearchOptions.CA_FINGERPRINT);
+        return options;
     }
 
     @Override
@@ -62,6 +57,6 @@ public class ElasticsearchDynamicTableFactory implements DynamicTableSinkFactory
         // 3. 获取物理数据类型（Schema）
         DataType physicalDataType = context.getCatalogTable().getResolvedSchema().toPhysicalRowDataType();
 
-        return new ElasticsearchDynamicSink(config.get(HOSTS), config.get(INDEX), physicalDataType);
+        return new ElasticsearchDynamicSink(config, physicalDataType);
     }
 }

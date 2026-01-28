@@ -1,6 +1,8 @@
 package com.zzq.flink.streaming.connectors.elasticsearch.table;
 
 
+import com.zzq.flink.streaming.connectors.elasticsearch.config.ElasticsearchOptions;
+import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
@@ -15,14 +17,13 @@ import org.apache.flink.types.RowKind;
 
 public class ElasticsearchDynamicSink implements DynamicTableSink {
 
-    private final String hosts;
-    private final String index;
+
     private final DataType physicalDataType;
+    private final ReadableConfig config;
 
     // 构造函数，由 Factory 调用
-    public ElasticsearchDynamicSink(String hosts, String index, DataType physicalDataType) {
-        this.hosts = hosts;
-        this.index = index;
+    public ElasticsearchDynamicSink(ReadableConfig config, DataType physicalDataType) {
+        this.config = config;
         this.physicalDataType = physicalDataType;
     }
 
@@ -42,7 +43,8 @@ public class ElasticsearchDynamicSink implements DynamicTableSink {
     public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
         // 核心步骤：创建真正的物理 Sink 执行器
         // 我们可以把解析后的 physicalDataType 传递给 SinkFunction
-        ElasticsearchSinkFunction sinkFunction = new ElasticsearchSinkFunction(hosts, index, physicalDataType);
+        ElasticsearchSinkFunction sinkFunction = new ElasticsearchSinkFunction(config.get(ElasticsearchOptions.HOSTS),
+                config.get(ElasticsearchOptions.INDEX), physicalDataType);
 
         // 返回 SinkFunctionProvider，Flink 会在并行算子中实例化它
         return SinkFunctionProvider.of(sinkFunction);
@@ -50,7 +52,7 @@ public class ElasticsearchDynamicSink implements DynamicTableSink {
 
     @Override
     public DynamicTableSink copy() {
-        return new ElasticsearchDynamicSink(hosts, index, physicalDataType);
+        return new ElasticsearchDynamicSink(config, physicalDataType);
     }
 
     @Override
