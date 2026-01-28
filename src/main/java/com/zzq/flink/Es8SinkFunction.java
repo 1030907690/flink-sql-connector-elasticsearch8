@@ -162,7 +162,9 @@ public class Es8SinkFunction extends RichSinkFunction<RowData> {
 
     @Override
     public void close() throws Exception {
-        if (client != null) client._transport().close();
+        if (client != null) {
+            client._transport().close();
+        }
     }
 }
 
