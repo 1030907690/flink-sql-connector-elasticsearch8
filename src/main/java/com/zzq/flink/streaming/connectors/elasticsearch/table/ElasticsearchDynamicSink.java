@@ -13,14 +13,14 @@ import org.apache.flink.types.RowKind;
  * 描述数据如何写入。负责在提交 Job 时验证 Schema 和配置
  */
 
-public class Es8DynamicSink implements DynamicTableSink {
+public class ElasticsearchDynamicSink implements DynamicTableSink {
 
     private final String hosts;
     private final String index;
     private final DataType physicalDataType;
 
     // 构造函数，由 Factory 调用
-    public Es8DynamicSink(String hosts, String index, DataType physicalDataType) {
+    public ElasticsearchDynamicSink(String hosts, String index, DataType physicalDataType) {
         this.hosts = hosts;
         this.index = index;
         this.physicalDataType = physicalDataType;
@@ -42,7 +42,7 @@ public class Es8DynamicSink implements DynamicTableSink {
     public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
         // 核心步骤：创建真正的物理 Sink 执行器
         // 我们可以把解析后的 physicalDataType 传递给 SinkFunction
-        Es8SinkFunction sinkFunction = new Es8SinkFunction(hosts, index, physicalDataType);
+        ElasticsearchSinkFunction sinkFunction = new ElasticsearchSinkFunction(hosts, index, physicalDataType);
 
         // 返回 SinkFunctionProvider，Flink 会在并行算子中实例化它
         return SinkFunctionProvider.of(sinkFunction);
@@ -50,7 +50,7 @@ public class Es8DynamicSink implements DynamicTableSink {
 
     @Override
     public DynamicTableSink copy() {
-        return new Es8DynamicSink(hosts, index, physicalDataType);
+        return new ElasticsearchDynamicSink(hosts, index, physicalDataType);
     }
 
     @Override

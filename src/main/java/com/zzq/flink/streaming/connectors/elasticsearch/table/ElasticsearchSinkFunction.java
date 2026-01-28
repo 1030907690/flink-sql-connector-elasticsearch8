@@ -23,7 +23,7 @@ import java.util.Map;
  * @date 2026/01/27 18:51:19
  * 真正操作ES的地方
  */
-public class Es8SinkFunction extends RichSinkFunction<RowData> {
+public class ElasticsearchSinkFunction extends RichSinkFunction<RowData> {
     private transient ElasticsearchClient client;
     private final String hosts;
     private final String index;
@@ -33,7 +33,7 @@ public class Es8SinkFunction extends RichSinkFunction<RowData> {
     // 在类成员变量中定义格式化器
     private transient java.time.format.DateTimeFormatter formatter;
 
-    public Es8SinkFunction(String hosts, String index, DataType physicalDataType) {
+    public ElasticsearchSinkFunction(String hosts, String index, DataType physicalDataType) {
         this.hosts = hosts;
         this.index = index;
         this.physicalDataType = physicalDataType;

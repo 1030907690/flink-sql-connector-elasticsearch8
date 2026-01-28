@@ -17,7 +17,7 @@ import java.util.Set;
  * @date 2026/01/27 18:48:39
  * 入口点。负责解析 SQL 中的 WITH 参数，并决定创建 Sink 还是 Source
  */
-public class Es8DynamicTableFactory implements DynamicTableSinkFactory {
+public class ElasticsearchDynamicTableFactory implements DynamicTableSinkFactory {
 
     // 1. 定义配置项 (必须是 ConfigOption)
     public static final ConfigOption<String> HOSTS = ConfigOptions
@@ -62,6 +62,6 @@ public class Es8DynamicTableFactory implements DynamicTableSinkFactory {
         // 3. 获取物理数据类型（Schema）
         DataType physicalDataType = context.getCatalogTable().getResolvedSchema().toPhysicalRowDataType();
 
-        return new Es8DynamicSink(config.get(HOSTS), config.get(INDEX), physicalDataType);
+        return new ElasticsearchDynamicSink(config.get(HOSTS), config.get(INDEX), physicalDataType);
     }
 }
