@@ -16,6 +16,7 @@ import java.util.Set;
 /**
  * @author zzq
  * @date 2026/01/27 18:48:39
+ * 入口点。负责解析 SQL 中的 WITH 参数，并决定创建 Sink 还是 Source
  */
 public class Es8DynamicTableFactory implements DynamicTableSinkFactory {
 

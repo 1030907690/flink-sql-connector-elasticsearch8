@@ -21,6 +21,7 @@ import java.util.Map;
 /**
  * @author zzq
  * @date 2026/01/27 18:51:19
+ * 真正操作ES的地方
  */
 public class Es8SinkFunction extends RichSinkFunction<RowData> {
     private transient ElasticsearchClient client;
