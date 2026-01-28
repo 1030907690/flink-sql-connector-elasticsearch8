@@ -29,6 +29,8 @@ public class Es8SinkFunction extends RichSinkFunction<RowData> {
     private final DataType physicalDataType;
     private transient RowData.FieldGetter[] fieldGetters;
     private int primaryKeyIndex = 0; // 假设第一列是主键，实际应从 Schema 获取
+    // 在类成员变量中定义格式化器
+    private transient java.time.format.DateTimeFormatter formatter;
 
     public Es8SinkFunction(String hosts, String index, DataType physicalDataType) {
         this.hosts = hosts;
@@ -38,12 +40,13 @@ public class Es8SinkFunction extends RichSinkFunction<RowData> {
 
     @Override
     public void open(Configuration parameters) throws Exception {
-        // 1. 初始化 ES 8 客户端
+        this.formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        // 初始化 ES 8 客户端
         RestClient restClient = RestClient.builder(HttpHost.create(hosts)).build();
         ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
         this.client = new ElasticsearchClient(transport);
 
-        // 2. 预编译字段提取器 (提高性能)
+        // 预编译字段提取器 (提高性能)
         LogicalType logicalType = physicalDataType.getLogicalType();
         RowType rowType = (RowType) logicalType;
         fieldGetters = new RowData.FieldGetter[rowType.getFieldCount()];
@@ -75,6 +78,7 @@ public class Es8SinkFunction extends RichSinkFunction<RowData> {
 
 
 
+
     private Map<String, Object> rowToMap(RowData row) {
         Map<String, Object> map = new HashMap<>();
         RowType rowType = (RowType) physicalDataType.getLogicalType();
@@ -82,20 +86,78 @@ public class Es8SinkFunction extends RichSinkFunction<RowData> {
 
         for (int i = 0; i < fieldGetters.length; i++) {
             Object val = fieldGetters[i].getFieldOrNull(row);
-
-            // --- 核心修复：转换 Flink 内部对象为标准 Java 对象 ---
-            if (val instanceof StringData) {
-                val = val.toString(); // 转换 BinaryStringData 为 String
-            } else if (val instanceof TimestampData) {
-                val = ((TimestampData) val).toTimestamp(); // 转换 TimestampData 为 java.sql.Timestamp
-            } else if (val instanceof DecimalData) {
-                val = ((DecimalData) val).toBigDecimal(); // 转换精度数据
-            }
-            // 根据需要添加其他类型处理，如 ArrayData, MapData
-
-            map.put(fieldNames.get(i), val);
+            // 获取该列的逻辑类型，用于处理复杂类型
+            LogicalType type = rowType.getTypeAt(i);
+            map.put(fieldNames.get(i), convertFlinkType(val, type));
         }
         return map;
+    }
+
+    private Object convertFlinkType(Object val, LogicalType type) {
+        if (val == null) {
+            return null;
+        }
+
+        // 处理嵌套行 (NestedRowData)
+        if (val instanceof RowData) {
+            RowData row = (RowData) val;
+            RowType rowType = (RowType) type;
+            Map<String, Object> nestedMap = new HashMap<>();
+            List<String> fieldNames = rowType.getFieldNames();
+            List<LogicalType> fieldTypes = rowType.getChildren();
+
+            for (int i = 0; i < row.getArity(); i++) {
+                // 为每一列创建临时 FieldGetter
+                RowData.FieldGetter getter = RowData.createFieldGetter(fieldTypes.get(i), i);
+                nestedMap.put(fieldNames.get(i), convertFlinkType(getter.getFieldOrNull(row), fieldTypes.get(i)));
+            }
+            return nestedMap;
+        }
+
+        // 处理 Map 类型
+        if (val instanceof MapData) {
+            MapData mapData = (MapData) val;
+            LogicalType keyType = ((org.apache.flink.table.types.logical.MapType) type).getKeyType();
+            LogicalType valueType = ((org.apache.flink.table.types.logical.MapType) type).getValueType();
+
+            // 提取 Key 和 Value 的 FieldGetter (简单示例，生产建议缓存)
+            ArrayData keyArray = mapData.keyArray();
+            ArrayData valueArray = mapData.valueArray();
+            Map<Object, Object> javaMap = new HashMap<>();
+
+            for (int i = 0; i < mapData.size(); i++) {
+                Object k = ArrayData.createElementGetter(keyType).getElementOrNull(keyArray, i);
+                Object v = ArrayData.createElementGetter(valueType).getElementOrNull(valueArray, i);
+                javaMap.put(convertFlinkType(k, keyType), convertFlinkType(v, valueType));
+            }
+            return javaMap;
+        }
+
+        // 处理 Array 类型
+        if (val instanceof ArrayData) {
+            ArrayData arrayData = (ArrayData) val;
+            LogicalType eleType = ((org.apache.flink.table.types.logical.ArrayType) type).getElementType();
+            List<Object> list = new java.util.ArrayList<>();
+            for (int i = 0; i < arrayData.size(); i++) {
+                Object ele = ArrayData.createElementGetter(eleType).getElementOrNull(arrayData, i);
+                list.add(convertFlinkType(ele, eleType));
+            }
+            return list;
+        }
+
+
+        // 处理基础 Data 包装类
+        if (val instanceof StringData) {
+            return val.toString();
+        }
+        if (val instanceof TimestampData) {
+            // 解决时间格式
+            return ((TimestampData) val).toLocalDateTime().format(formatter);
+        }
+        if (val instanceof DecimalData) {
+            return ((DecimalData) val).toBigDecimal();
+        }
+        return val;
     }
 
     @Override
