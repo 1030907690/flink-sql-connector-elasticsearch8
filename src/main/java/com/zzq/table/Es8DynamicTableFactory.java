@@ -1,5 +1,6 @@
-package com.zzq.flink;
+package com.zzq.table;
 
+import com.zzq.flink.Es8DynamicSink;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.ReadableConfig;
