@@ -57,6 +57,6 @@ public class ElasticsearchDynamicSink implements DynamicTableSink {
 
     @Override
     public String asSummaryString() {
-        return "Elasticsearch 8 Custom Sink";
+        return "Elasticsearch 8 Sink";
     }
 }

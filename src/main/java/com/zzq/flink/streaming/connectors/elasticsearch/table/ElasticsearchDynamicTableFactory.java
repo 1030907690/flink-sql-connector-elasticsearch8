@@ -24,7 +24,7 @@ public class ElasticsearchDynamicTableFactory implements DynamicTableSinkFactory
 
     @Override
     public String factoryIdentifier() {
-        return "elasticsearch-8-custom"; // SQL 中使用的 'connector' 名称
+        return "elasticsearch-8"; // SQL 中使用的 'connector' 名称
     }
 
     @Override
