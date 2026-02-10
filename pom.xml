@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.1030907690</groupId>
-    <artifactId>flink-sql-connector-elasticsearch8-custom</artifactId>
+    <artifactId>flink-sql-connector-elasticsearch8</artifactId>
     <version>${revision}</version>
     <name>${project.artifactId}</name>
     <url>https://github.com/1030907690/flink-sql-connector-elasticsearch8</url>
@@ -39,6 +39,7 @@
         <elasticsearch.version>8.18.8</elasticsearch.version>
         <scala.binary.version>2.12</scala.binary.version>
         <java.version>21</java.version>
+        <revision>1.0.0</revision>
     </properties>
 
     <dependencies>
