@@ -30,8 +30,13 @@ public class ElasticsearchSinkFunction extends RichSinkFunction<RowData> {
     private final String index;
     private final DataType physicalDataType;
     private transient RowData.FieldGetter[] fieldGetters;
-    private int primaryKeyIndex = 0; // 假设第一列是主键，实际应从 Schema 获取
-    // 在类成员变量中定义格式化器
+    /**
+     *  假设第一列是主键，实际应从 Schema 获取
+     * */
+    private int primaryKeyIndex = 0;
+    /***
+     * 在类成员变量中定义格式化器
+     * **/
     private transient java.time.format.DateTimeFormatter formatter;
 
     public ElasticsearchSinkFunction(String hosts, String index, DataType physicalDataType) {
