@@ -4,9 +4,10 @@ import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 
 /**
- * @author zzq
- * @date 2026/01/28 15:59:30
  * 集中管理所有 ConfigOption
+ * @author zzq
+ * @since 2026/01/28 15:59:30
+ *
  */
 public class ElasticsearchOptions {
 

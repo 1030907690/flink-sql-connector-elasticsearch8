@@ -10,9 +10,9 @@ import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.RowKind;
 
 /**
- * @author zzq
- * @date 2026/01/27 18:50:21
  * 描述数据如何写入。负责在提交 Job 时验证 Schema 和配置
+ * @author zzq
+ * @since 2026/01/27 18:50:21
  */
 
 public class ElasticsearchDynamicSink implements DynamicTableSink {
