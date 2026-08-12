@@ -43,8 +43,16 @@ public class ElasticsearchDynamicSink implements DynamicTableSink {
     public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
         // 核心步骤：创建真正的物理 Sink 执行器
         // 我们可以把解析后的 physicalDataType 传递给 SinkFunction
+        // 批量写入参数在这里从配置中取出，通过构造函数传给 SinkFunction：
+        //  - 不直接传 ReadableConfig：SinkFunction 实例会被 Java 序列化分发到各 TaskManager，
+        //    传基本类型最稳妥（无序列化风险）
+        //  - MemorySize/Duration 是 Flink 配置类型，转成基本类型（long）后传递
         ElasticsearchSinkFunction sinkFunction = new ElasticsearchSinkFunction(config.get(ElasticsearchOptions.HOSTS),
-                config.get(ElasticsearchOptions.INDEX), physicalDataType);
+                config.get(ElasticsearchOptions.INDEX), physicalDataType,
+                config.get(ElasticsearchOptions.BULK_FLUSH_MAX_ACTIONS),       // 每条批次最大条数（int）
+                config.get(ElasticsearchOptions.BULK_FLUSH_MAX_SIZE).getBytes(),      // 每批最大字节数（long）
+                config.get(ElasticsearchOptions.BULK_FLUSH_INTERVAL).toMillis(),      // 攒批最长时间（毫秒）
+                config.get(ElasticsearchOptions.BULK_CONCURRENT_REQUESTS));   // 并发 bulk 请求数（int）
 
         // 返回 SinkFunctionProvider，Flink 会在并行算子中实例化它
         return SinkFunctionProvider.of(sinkFunction);

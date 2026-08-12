@@ -42,6 +42,10 @@ public class ElasticsearchDynamicTableFactory implements DynamicTableSinkFactory
         options.add(ElasticsearchOptions.USERNAME);
         options.add(ElasticsearchOptions.PASSWORD);
         options.add(ElasticsearchOptions.BULK_FLUSH_MAX_ACTIONS);
+        // 批量写入相关配置（不注册的话，SQL 里写了这些参数会报未知参数错误）
+        options.add(ElasticsearchOptions.BULK_FLUSH_MAX_SIZE);
+        options.add(ElasticsearchOptions.BULK_FLUSH_INTERVAL);
+        options.add(ElasticsearchOptions.BULK_CONCURRENT_REQUESTS);
         options.add(ElasticsearchOptions.CA_FINGERPRINT);
         return options;
     }
