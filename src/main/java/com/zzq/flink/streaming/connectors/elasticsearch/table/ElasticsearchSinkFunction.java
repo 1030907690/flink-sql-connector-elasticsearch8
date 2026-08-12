@@ -38,19 +38,29 @@ import java.util.concurrent.TimeUnit;
  */
 public class ElasticsearchSinkFunction extends RichSinkFunction<RowData> {
 
+    /** 日志对象 */
     private final Logger log = LoggerFactory.getLogger(ElasticsearchSinkFunction.class);
 
+    /** ES 8 客户端 */
     private transient ElasticsearchClient client;
-    // 批量写入器：invoke() 只负责把操作加进缓冲，真正发请求由 BulkIngester 内部线程完成
+    /** 批量写入器：invoke() 只负责把操作加进缓冲，真正发请求由 BulkIngester 内部线程完成 */
     private transient BulkIngester<Void> bulkIngester;
+    /** ES 地址，支持逗号分隔多节点 */
     private final String hosts;
+    /** 目标索引名 */
     private final String index;
+    /** 物理表结构（用于把 RowData 转成 Map） */
     private final DataType physicalDataType;
     // ===== 批量写入参数（由构造器从配置传入，序列化到 TaskManager 后仍可用）=====
-    private final int bulkMaxActions;              // 每批最大条数，攒够即发
-    private final long bulkMaxSizeBytes;           // 每批最大字节数，攒够即发
-    private final long bulkFlushIntervalMillis;    // 攒批最长等待时间，到点即发（保证实时性）
-    private final int bulkConcurrentRequests;      // 并发 bulk 请求数，超出阻塞 add() 形成背压
+    /** 每批最大条数，攒够即发 */
+    private final int bulkMaxActions;
+    /** 每批最大字节数，攒够即发 */
+    private final long bulkMaxSizeBytes;
+    /** 攒批最长等待时间，到点即发（保证实时性） */
+    private final long bulkFlushIntervalMillis;
+    /** 并发 bulk 请求数，超出阻塞 add() 形成背压 */
+    private final int bulkConcurrentRequests;
+    /** 预编译字段提取器（提高性能） */
     private transient RowData.FieldGetter[] fieldGetters;
     /**
      *  假设第一列是主键，实际应从 Schema 获取
