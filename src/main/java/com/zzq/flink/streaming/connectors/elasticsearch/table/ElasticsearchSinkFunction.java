@@ -13,6 +13,8 @@ import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.types.RowKind;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +27,9 @@ import java.util.Map;
  *
  */
 public class ElasticsearchSinkFunction extends RichSinkFunction<RowData> {
+
+    private final Logger log = LoggerFactory.getLogger(ElasticsearchSinkFunction.class);
+
     private transient ElasticsearchClient client;
     private final String hosts;
     private final String index;
@@ -69,6 +74,7 @@ public class ElasticsearchSinkFunction extends RichSinkFunction<RowData> {
         String docId = fieldGetters[primaryKeyIndex].getFieldOrNull(value).toString();
 
         if (kind == RowKind.INSERT || kind == RowKind.UPDATE_AFTER) {
+            log.info("write ES, index={}, docId={}, op={}", index, docId, kind);
             // Upsert 操作
             Map<String, Object> doc = rowToMap(value);
             client.index(i -> i
@@ -76,6 +82,9 @@ public class ElasticsearchSinkFunction extends RichSinkFunction<RowData> {
                     .id(docId)
                     .document(doc)
             );
+
+            log.debug("write ES success, index={}, docId={}, doc={}", index, docId, doc);
+
         } else if (kind == RowKind.DELETE) {
             // 删除操作
             client.delete(d -> d.index(index).id(docId));
