@@ -21,7 +21,12 @@ public class ElasticsearchDynamicSink implements DynamicTableSink {
     private final DataType physicalDataType;
     private final ReadableConfig config;
 
-    // 构造函数，由 Factory 调用
+    /**
+     * 构造函数，由 Factory 调用
+     *
+     * @param config            SQL WITH 中解析出的全部配置项
+     * @param physicalDataType  物理表结构（排除计算列等非物理列）
+     */
     public ElasticsearchDynamicSink(ReadableConfig config, DataType physicalDataType) {
         this.config = config;
         this.physicalDataType = physicalDataType;
