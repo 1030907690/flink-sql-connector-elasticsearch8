@@ -195,7 +195,8 @@ public class ElasticsearchSinkFunction extends RichSinkFunction<RowData> {
 
         } else if (kind == RowKind.DELETE) {
             // 删除操作（同样进入批量，与写入共用同一缓冲队列）
-            bulkIngester.add(op -> op.delete(d -> d.index(index).id(docId)));
+            // 双流join撤回流问题，一般不会物理删除，先屏蔽
+           // bulkIngester.add(op -> op.delete(d -> d.index(index).id(docId)));
         }
         // UPDATE_BEFORE 通常忽略，因为紧接着的 UPDATE_AFTER 会覆盖整个 Doc
     }
