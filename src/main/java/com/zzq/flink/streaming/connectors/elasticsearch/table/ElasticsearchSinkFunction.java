@@ -179,8 +179,10 @@ public class ElasticsearchSinkFunction extends RichSinkFunction<RowData> {
         RowKind kind = value.getRowKind();
         String docId = fieldGetters[primaryKeyIndex].getFieldOrNull(value).toString();
 
+        log.info("write ES, index={}, docId={}, op={}", index, docId, kind);
+
         if (kind == RowKind.INSERT || kind == RowKind.UPDATE_AFTER) {
-            log.info("write ES, index={}, docId={}, op={}", index, docId, kind);
+
             // Upsert 操作（加入批量缓冲，不阻塞当前线程，吞吐远高于逐条写）
             Map<String, Object> doc = rowToMap(value);
             bulkIngester.add(op -> op.index(i -> i
